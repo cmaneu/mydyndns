@@ -34,10 +34,9 @@ jobs:
     - name: Available platforms
       run: |
         echo ${{ steps.buildx.outputs.platforms }}
-        echo ${{ secrets.DOCKER_USERNAME }}
 
     - name: Build image (ARM32)
-      run: docker build . --file "MyDynDns.Client/Dockerfile.arm32" --tag mydyndns:latest-arm32
+      run: docker build --file "MyDynDns.Client/Dockerfile.arm32" --tag mydyndns:latest-arm32 .
   
     - name: Docker push
       run: |
