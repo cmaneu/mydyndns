@@ -33,7 +33,12 @@ jobs:
         echo ${{ steps.buildx.outputs.platforms }}
 
     - name: Build image (ARM32)
-      run: docker build . --load --file "MyDynDns.Client/Dockerfile.arm32" --tag $IMAGE_NAME-arm32
+      run: |
+        docker buildx build \
+        --platform "linux/arm/v7" \
+        --tag $IMAGE_NAME-arm32 \
+        --file "MyDynDns.Client/Dockerfile.arm32" \
+        --output type=image,push=false .
 
     - name: Log into registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
