@@ -28,7 +28,7 @@ jobs:
 
       - name: Run tests
         run: |
-          docker build "MyDynDns.Client" --file Dockerfile
+          docker build "./MyDynDns.Client" --file Dockerfile
 
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
