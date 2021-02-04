@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "MyDynDns.Client": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "environmentVariables": {
+        "AUTOPUDATE_REFRESH": "60",
+        "AUTOUPDATE_ENDPOINT": "https://requestbin.net/r/3mp9wo40"
+      }
+    }
+  }
+}
