@@ -54,10 +54,10 @@ jobs:
         run: docker build . --file "MyDynDns.Client/Dockerfile" --tag $IMAGE_NAME
 
       - name: Build image (ARM64)
-        run: docker build . --file "MyDynDns.Client/Dockerfile" --tag $IMAGE_NAME-arm64
+        run: docker build . --file "MyDynDns.Client/Dockerfile.arm64" --tag $IMAGE_NAME-arm64
 
       - name: Build image (ARM32)
-        run: docker build . --file "MyDynDns.Client/Dockerfile" --tag $IMAGE_NAME-arm32
+        run: docker build . --file "MyDynDns.Client/Dockerfile.arm32" --tag $IMAGE_NAME-arm32
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
