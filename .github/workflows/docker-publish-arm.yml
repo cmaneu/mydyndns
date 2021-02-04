@@ -18,6 +18,13 @@ jobs:
     - name: Docker login
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
+    - name: Set up QEMU
+      id: qemu
+      uses: docker/setup-qemu-action@v1
+      with:
+        image: tonistiigi/binfmt:latest
+        platforms: all
+
     - name: Set up Docker Buildx
       id: buildx
       uses: docker/setup-buildx-action@v1
