@@ -1,0 +1,32 @@
+name: Docker publish ARM
+ 
+on:
+  push:
+    paths:
+    - '.github/workflows/docker-publish-arm.yml'
+ 
+jobs:
+  build-n-publish:
+    runs-on: ubuntu-latest
+ 
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+ 
+    - name: Docker login
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+ 
+    - name: Docker build
+      working-directory: ./MyDynDns.Client
+      run: |
+          docker buildx \
+            --platform linux/arm/v7 \
+            --file Dockerfile.arm32
+            -t mydyndns:latest-arm32 .
+  
+    - name: Docker push
+      run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/mydyndns:latest-arm32
+ 
+    - name: Docker logout
+      run: docker logout
