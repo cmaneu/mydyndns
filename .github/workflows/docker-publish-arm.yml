@@ -40,7 +40,7 @@ jobs:
 
     - name: Push image (ARM32)
       run: |
-        IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME-arm32
+        IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
 
         # Change all uppercase to lowercase
         IMAGE_ID=$(echo $IMAGE_ID-arm32 | tr '[A-Z]' '[a-z]')
