@@ -19,7 +19,7 @@ jobs:
     - name: Docker build
       working-directory: ./MyDynDns.Client
       run: |
-          docker buildx \
+          docker buildx build \
             --platform linux/arm/v7 \
             --file Dockerfile.arm32
             -t mydyndns:latest-arm32 .
