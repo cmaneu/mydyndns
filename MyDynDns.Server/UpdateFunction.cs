@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -7,38 +6,63 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.WebJobs.Extensions.Storage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 
 namespace MyDynDns.Server
 {
+
     public static class UpdateFunction
     {
         [FunctionName(nameof(Update))]
         public static async Task<IActionResult> Update(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "update/{hostname}")] HttpRequest req,
+            IBinder binder,
             string hostname,
             ILogger log)
         {
             log.LogInformation($"Update request for {hostname}");
 
+            string currentClientIp = GetIpFromRequestHeaders(req);
+
+            string existingIp = null;
+
+            using (var reader = await binder.BindAsync<TextReader>(new BlobAttribute(
+                $"registrations/{hostname.Replace('.','-')}.txt", FileAccess.Read)))
+            {
+                existingIp = await reader.ReadLineAsync();
+            };
+
+            if (existingIp == currentClientIp)
+            {
+                log.LogInformation("Same IP, skipping update");
+                return new OkObjectResult("ok");
+            }
+
+            // we need to update
+
             string zoneIdentifier = null;
             string recordIdentifier = null;
-
+            
             zoneIdentifier = req.Query[nameof(zoneIdentifier)];
             recordIdentifier = req.Query[nameof(recordIdentifier)];
 
             if (string.IsNullOrWhiteSpace(zoneIdentifier) || string.IsNullOrWhiteSpace(recordIdentifier))
                 return new BadRequestResult();
-
-            string content = GetIpFromRequestHeaders(req);
-
-            log.LogInformation($"Updating {hostname} from {content}");
+            
+            log.LogInformation($"Updating {hostname} from {currentClientIp}");
 
             var cloudFlare = new CloudflareClient(Environment.GetEnvironmentVariable("CLOUDFLARE_APITOKEN"));
-
-            await cloudFlare.UpdateDnsZone(hostname, zoneIdentifier, recordIdentifier, content);
+            await cloudFlare.UpdateDnsZone(hostname, zoneIdentifier, recordIdentifier, currentClientIp);
+            
+            using (var writer = await binder.BindAsync<TextWriter>(new BlobAttribute(
+                $"registrations/{hostname.Replace('.', '-')}.txt", FileAccess.Write)))
+            {
+                await writer.WriteAsync(currentClientIp);
+            };
             return new OkObjectResult("ok");
         }
 
