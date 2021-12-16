@@ -27,7 +27,7 @@ namespace MyDynDns.Server
             log.LogInformation($"Update request for {hostname}");
 
             string currentClientIp = GetIpFromRequestHeaders(req);
-            log.LogInformation($"Client IP: {currentClientIp.Take(6)}");
+            log.LogInformation($"Client IP: {currentClientIp.Substring(0,6)}");
 
             string existingIp = null;
 
