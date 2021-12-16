@@ -27,6 +27,7 @@ namespace MyDynDns.Server
             log.LogInformation($"Update request for {hostname}");
 
             string currentClientIp = GetIpFromRequestHeaders(req);
+            log.LogInformation($"Client IP: {currentClientIp.Take(6)}");
 
             string existingIp = null;
 
@@ -42,6 +43,7 @@ namespace MyDynDns.Server
                 return new OkObjectResult("ok");
             }
 
+            log.LogInformation("Updating IP in Cloudflare...");
             // we need to update
 
             string zoneIdentifier = null;
@@ -58,6 +60,8 @@ namespace MyDynDns.Server
             var cloudFlare = new CloudflareClient(Environment.GetEnvironmentVariable("CLOUDFLARE_APITOKEN"));
             await cloudFlare.UpdateDnsZone(hostname, zoneIdentifier, recordIdentifier, currentClientIp);
             
+            log.LogInformation("IP Updated");
+
             using (var writer = await binder.BindAsync<TextWriter>(new BlobAttribute(
                 $"registrations/{hostname.Replace('.', '-')}.txt", FileAccess.Write)))
             {
