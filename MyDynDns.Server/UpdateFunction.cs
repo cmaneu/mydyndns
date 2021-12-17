@@ -30,31 +30,34 @@ namespace MyDynDns.Server
             log.LogInformation($"Client IP: {currentClientIp.Substring(0,6)}");
 
             string existingIp = null;
-
-            using (var reader = await binder.BindAsync<TextReader>(new BlobAttribute(
-                $"registrations/{hostname.Replace('.','-')}.txt", FileAccess.Read)))
-            {
-                existingIp = await reader.ReadLineAsync();
-            };
-
-            if (existingIp == currentClientIp)
-            {
-                log.LogInformation("Same IP, skipping update");
-                return new OkObjectResult("ok");
-            }
-
-            log.LogInformation("Updating IP in Cloudflare...");
-            // we need to update
-
             string zoneIdentifier = null;
             string recordIdentifier = null;
             
             zoneIdentifier = req.Query[nameof(zoneIdentifier)];
             recordIdentifier = req.Query[nameof(recordIdentifier)];
 
-            if (string.IsNullOrWhiteSpace(zoneIdentifier) || string.IsNullOrWhiteSpace(recordIdentifier))
-                return new BadRequestResult();
-            
+            using (var reader = await binder.BindAsync<TextReader>(new BlobAttribute(
+                $"registrations/{hostname.Replace('.','-')}.txt", FileAccess.Read)))
+            {
+                existingIp = await reader.ReadLineAsync();
+       
+                if (existingIp == currentClientIp)
+                {
+                    log.LogInformation("Same IP, skipping update");
+                    return new OkObjectResult("ok");
+                }
+
+                // we need to update
+                log.LogInformation("Updating IP in Cloudflare...");
+
+                if (string.IsNullOrWhiteSpace(zoneIdentifier) || string.IsNullOrWhiteSpace(recordIdentifier))
+                {
+                    zoneIdentifier = await reader.ReadLineAsync();
+                    recordIdentifier = await reader.ReadLineAsync();
+                }
+            };
+
+            log.LogInformation($"ZoneId: {zoneIdentifier}, Record: {recordIdentifier}");
             log.LogInformation($"Updating {hostname} from {currentClientIp}");
 
             var cloudFlare = new CloudflareClient(Environment.GetEnvironmentVariable("CLOUDFLARE_APITOKEN"));
@@ -65,7 +68,8 @@ namespace MyDynDns.Server
             using (var writer = await binder.BindAsync<TextWriter>(new BlobAttribute(
                 $"registrations/{hostname.Replace('.', '-')}.txt", FileAccess.Write)))
             {
-                await writer.WriteAsync(currentClientIp);
+                string blobRegistrationContent = currentClientIp + Environment.NewLine + zoneIdentifier + Environment.NewLine + recordIdentifier;
+                await writer.WriteAsync(blobRegistrationContent);
             };
             return new OkObjectResult("ok");
         }
